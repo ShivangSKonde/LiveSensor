@@ -7,5 +7,6 @@ setup(
     author='Shivang',
     author_email='shiva@gmail.com',
     packages=find_packages(),
-    install_requires=['pymongo']
+    install_requires=['pymongo','python-dotenv'],
+
 )

@@ -1,3 +1,4 @@
 pymongo == 4.0.2
+python-dotenv
 
 -e.
