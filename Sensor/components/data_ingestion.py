@@ -45,6 +45,7 @@ class DataIngestion:
             dir_path = os.path.dirname(feature_store_file_path)
             os.makedirs(dir_path, exist_ok=True)
 
+            # Writes dataframe into CSV file
             dataframe.to_csv(feature_store_file_path, index=False, header=True)
             return dataframe
 
@@ -69,6 +70,7 @@ class DataIngestion:
 
             logging.info(f"Exporting train and test file path.")
 
+            # Load the train set to CSV file at the particular location
             train_set.to_csv(
                 self.data_ingestion_config.training_file_path, index=False, header=True
             )
@@ -84,11 +86,16 @@ class DataIngestion:
 
     def initiate_data_ingestion(self) -> DataIngestionArtifact:
             try:
+                # data frame taken from the 'feature store' function which is the first function
                 dataframe = self.export_data_into_feature_store()
+
+                # dropping the columns which are redundant such that it will match with the validation columns
                 dataframe = dataframe.drop(self._schema_config["drop_columns"], axis=1)
 
+                # folder and file creation for train and test actually happens in this line
                 self.split_data_as_train_test(dataframe=dataframe)
 
+                # This line is just storing the paths for train and test files such that it can be used in further steps
                 data_ingestion_artifact = DataIngestionArtifact(
                     trained_file_path=self.data_ingestion_config.training_file_path,
                     test_file_path=self.data_ingestion_config.testing_file_path)

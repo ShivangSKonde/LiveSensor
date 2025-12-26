@@ -2,7 +2,7 @@ from Sensor.exception import SensorException
 import sys
 import os
 from Sensor.logger import logging
-from Sensor.utils import dump_csv_file_to_mongodb_collection
+#from Sensor.utils import dump_csv_file_to_mongodb_collection
 from Sensor.pipeline.training_pipeline import TrainPipeline
 
 
