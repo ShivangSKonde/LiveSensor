@@ -1,18 +1,20 @@
 from Sensor.components.data_transformation import DataTransformation
 from Sensor.components.data_validation import DataValidation
 from Sensor.components.model_evaluation import ModelEvaluation
+from Sensor.components.model_pusher import ModelPusher
 from Sensor.components.model_trainer import ModelTrainer
 from Sensor.entity.config_entity import TrainingPipelineConfig, DataIngestionConfig, DataValidationConfig, \
-    DataTransformationConfig, ModelTrainerConfig, ModelEvaluationConfig
+    DataTransformationConfig, ModelTrainerConfig, ModelEvaluationConfig, ModelPusherConfig
 from Sensor.exception import SensorException
 from Sensor.entity.artifact_entity import DataIngestionArtifact, DataValidationArtifact, DataTransformationArtifact, \
-    ModelTrainerArtifact
+    ModelTrainerArtifact, ModelEvaluationArtifact
 from Sensor.logger import logging
 import sys, os
 from Sensor.components.data_ingestion import DataIngestion
 
 
 class TrainPipeline:
+    is_pipeline_running = False
 
     def __init__(self):
         self.training_pipeline_config = TrainingPipelineConfig()
@@ -92,8 +94,19 @@ class TrainPipeline:
         except  Exception as e:
             raise SensorException(e, sys)
 
+    def start_model_pusher(self, model_eval_artifact: ModelEvaluationArtifact):
+        try:
+            model_pusher_config = ModelPusherConfig(training_pipeline_config=self.training_pipeline_config)
+            model_pusher = ModelPusher(model_pusher_config, model_eval_artifact)
+
+            model_pusher_artifact = model_pusher.initiate_model_pusher()
+            return model_pusher_artifact
+        except  Exception as e:
+            raise SensorException(e, sys)
+
     def run_pipeline(self):
         try:
+            TrainPipeline.is_pipeline_running = True
             data_ingestion_artifact: DataIngestionArtifact = self.start_data_ingestion()
             data_validation_artifact: DataValidationArtifact = self.start_data_validaton(data_ingestion_artifact=data_ingestion_artifact)
 
@@ -106,5 +119,10 @@ class TrainPipeline:
 
             if not model_eval_artifact.is_model_accepted:
                 raise Exception("Trained model is not better than the best model")
+
+            model_eval_artifact = self.start_model_pusher(model_eval_artifact)
+
+            TrainPipeline.is_pipeline_running = False
         except Exception as e:
+            TrainPipeline.is_pipeline_running = False
             raise SensorException(e, sys)
